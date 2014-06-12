@@ -20,7 +20,8 @@ Transformations performed here are:
 1. Remove intervals that have no data and save in data frame named cleanDat  
 2. Bin the steps data into daily totals and save in a data frame named dailySteps
 
-```{r}
+
+```r
 # Data has already been downloaded and unzipped in the working directory, now read it
 dat <- read.csv("activity.csv")
 
@@ -43,18 +44,33 @@ Assignment statement:
 
 The default of five bins is a bit coarse so the histogram is set to 10 bins.
 
-```{r}
+
+```r
 # Plot histogram with 10 bins
 hist(dailySteps$steps, col="steelblue", breaks=10, xlab="Daily Steps", ylab="Number of Days", main="Histogram of Number of Steps per Day")
 ```
+
+![plot of chunk unnamed-chunk-2](figure/unnamed-chunk-2.png) 
 
 ### Mean and median total number of steps taken per day
 
 Mean and median are computed on the data set after missing data have been removed.
 
-```{r}
+
+```r
 mean(dailySteps$steps)
+```
+
+```
+## [1] 10766
+```
+
+```r
 median(dailySteps$steps)
+```
+
+```
+## [1] 10765
 ```
 
 ## What is the average daily activity pattern?
@@ -67,21 +83,30 @@ Assignment statement:
 
 Compute the average steps taken in each interval across all days.
 
-```{r}
+
+```r
 intervalAverages <- ddply(cleanDat[-2], .(interval), numcolwise(mean))
 ```
 
 Plot the time series of interval averages averaged across all days.
-```{r}
+
+```r
 library(lattice)
 xyplot(steps ~ interval, data=intervalAverages, type="l")
 ```
 
+![plot of chunk unnamed-chunk-5](figure/unnamed-chunk-5.png) 
+
 The interval with the maximum number of steps, on average across all days, is:
 
-```{r}
+
+```r
 # Interval with max number of steps, on average across all days
 intervalAverages[which.max(intervalAverages$steps), "interval"]
+```
+
+```
+## [1] 835
 ```
 
 ## Imputing missing values
@@ -100,13 +125,23 @@ Assignment statement:
 ### Total number of missing values (number of rows with NAs)
 
 Previously created a data frame named cleanDat with rows containing NAs removed. So the number of rows with NAs is the difference between the number of rows in the original data frame and the number of rows in cleanDat, ala
-```{r}
+
+```r
 nrow(dat) - nrow(cleanDat)
 ```
 
+```
+## [1] 2304
+```
+
 Another way, just to explore and confirm, is using which(), ala
-```{r}
+
+```r
 length(which(is.na(dat$steps)))
+```
+
+```
+## [1] 2304
 ```
 Which yields the same answer so must be correct!
 
@@ -114,9 +149,22 @@ Which yields the same answer so must be correct!
 
 The strategy I chose is to replace the missing values on a per-day basis with the average value for that weekday. For example, the first day of the data set is Monday and it has missing values. So I compute the average number of steps for all the other Mondays and use that to replace the missing Monday data in the original data set.
 
-```{r}
+
+```r
 # Add a variable called day to the dailySteps data frame. Uses lubridate package.
 library(lubridate)
+```
+
+```
+## 
+## Attaching package: 'lubridate'
+## 
+## The following object is masked from 'package:plyr':
+## 
+##     here
+```
+
+```r
 dailySteps$day <- wday(dailySteps$date, label=TRUE)
 
 # Get the days that have zero steps
@@ -131,7 +179,8 @@ dayAverages <- ddply(nonzeroDays[-1], .(day), numcolwise(mean))
 
 ### Create new data set with imputed values for missing data
 
-```{r}
+
+```r
 # Create an new daily steps data frame without the NAs removed
 newDailySteps <- ddply(dat[-3], .(date), numcolwise(sum))
 newDailySteps$day <- wday(newDailySteps$date, label=TRUE)
@@ -146,14 +195,18 @@ for (i in 1:nrow(newDailySteps))
 
 Now, working with the data frame named newDailySteps that has had missing values replaced with imputed values, the histogram looks like this.
 
-```{r}
+
+```r
 # Plot histogram with 10 bins
 hist(newDailySteps$steps, col="steelblue", breaks=10, xlab="Daily Steps", ylab="Number of Days", main="Histogram of Daily Steps with Imputed Data")
 ```
 
+![plot of chunk unnamed-chunk-11](figure/unnamed-chunk-11.png) 
+
 The  new histogram looks very similar to the original one, although it looks like the center bins are a little taller. Let's take a look at those bins side-by-side using the plotrix package.
 
-```{r}
+
+```r
 library(plotrix)
 l <- list(dailySteps$steps, newDailySteps$steps)
 multhist(l, xlab="Daily Steps", ylab="Frequency", col=c("blue", "green"))
@@ -161,13 +214,27 @@ legendText <- c("NAs removed", "Imputed Data")
 legend("topright", legend=legendText, col=c("blue", "green"), pch=15)
 ```
 
+![plot of chunk unnamed-chunk-12](figure/unnamed-chunk-12.png) 
+
 Indeed, the three center bins have a significantly higher fequency of occurrence when using imputed data for the missing data.
 
 The new mean and median are:
 
-```{r}
+
+```r
 mean(newDailySteps$steps)
+```
+
+```
+## [1] 10821
+```
+
+```r
 median(newDailySteps$steps)
+```
+
+```
+## [1] 11015
 ```
 
 In answer to the first question for this part of the assignment,
