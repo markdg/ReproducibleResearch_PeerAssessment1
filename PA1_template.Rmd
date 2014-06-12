@@ -132,8 +132,10 @@ dayAverages <- ddply(nonzeroDays[-1], .(day), numcolwise(mean))
 ### Create new data set with imputed values for missing data
 
 ```{r}
-# Create an new daily steps data frame without the NAs removed
+# Create a new daily steps data frame without the NAs removed
 newDailySteps <- ddply(dat[-3], .(date), numcolwise(sum))
+
+# Add a day variable to the data frame
 newDailySteps$day <- wday(newDailySteps$date, label=TRUE)
 
 # Substitute in the weekday average for days with NAs
@@ -187,3 +189,63 @@ Assignment statement:
 >1. Create a new factor variable in the dataset with two levels – “weekday” and “weekend” indicating whether a given date is a weekday or weekend day.  
 >2. Make a panel plot containing a time series plot (i.e. type = "l") of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all weekday days or weekend days (y-axis). The plot should look something like the following, which was creating using simulated data: (example charts)
 
+### Create the new factor variable and add it to the data set
+
+The unfortunate choice I made in the step above for the imputed data exercise means my new data set does not have intervals - they are all combined into steps per day. That means I have to redo the imputed data steps but for intervals to create the data set needed for this part of the assignment. (I should have read ahead and realized the implications. Or the assignment instructions could have been friendlier by pointing out we will need a filled in data set with intervals to complete the last question.)
+
+So impute values to replace missing interval data and create a new data set for use in this section.
+
+```{r}
+# Subset data to get only intervals with nonzero steps with which to compute averages
+nonnaIntervals <- dat[!is.na(dat$steps),]
+
+# Compute the average steps for each weekday using days with nonzero data.
+intervalAverages <- ddply(nonnaIntervals, .(interval), numcolwise(mean))
+
+# Make a copy of the data set to work on
+newIntervalSteps <- dat
+
+# Substitute in the interval average for intervals with NAs
+for (i in 1:nrow(newIntervalSteps))
+    if (is.na(newIntervalSteps[i, "steps"]))
+        newIntervalSteps[i, "steps"] <- intervalAverages[intervalAverages$interval==newIntervalSteps[i, "interval"], "steps"]
+```
+
+Add a variable named "day"" to the new interval data set.
+
+```{r}
+# Add a day variable to the data frame
+newIntervalSteps$day <- wday(newIntervalSteps$date, label=TRUE)
+```
+
+Now I have a data set with imputed values for the missing interval data and can use it to generate the plots for this section.
+
+```{r}
+# Create weekend set
+enddays <- c("Sat", "Sun")
+
+# Go through all rows of data set and add the new variable
+for (i in 1:nrow(newIntervalSteps)) {
+    if (newIntervalSteps[i, "day"] %in% enddays)
+        newIntervalSteps[i, "weekDayEnd"] <- "weekend"
+    else newIntervalSteps[i, "weekDayEnd"] <- "weekday"
+}
+
+# Make the new variable a factor variable
+newIntervalAverages$weekDayEnd <- as.factor(newIntervalAverages$weekDayEnd)
+```
+
+Average the interval values across the weekdays or weekend days.
+
+```{r}
+newIntervalAverages <- ddply(newIntervalSteps, .(weekDayEnd, interval), numcolwise(mean))
+```
+
+
+### Make the two-panel plot
+
+Now plot the two panel plot.
+
+```{r}
+xyplot(steps ~ interval | weekDayEnd, data = newIntervalAverages, layout=c(1,2), type="l", xlab="Interval", ylab="Number of steps")
+```
