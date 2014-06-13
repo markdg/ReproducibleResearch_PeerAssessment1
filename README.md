@@ -1,3 +1,11 @@
+## My Introduction
+
+Most of this README is from the assignment forked from the course repo. It follows below my introduction. I am just adding a few words here to explain what I did.
+
+Following all the assignment instructions, I added all my content to the PA1_template.Rmd file. All the code I wrote, code comments, and explanations are included in the .Rmd file. 
+
+Note that I did a couple of extra things with plots that were not required by the assignment. For the second histogram, the one with imputed data, I added a line for mean and median. It makes the histogram more useful and interesting. I also plotted an extra histogram which plots the first histogram and second with their bins side-by-side. This makes it easy to see how they differ.
+
 ## Introduction
 
 It is now possible to collect a large amount of data about personal

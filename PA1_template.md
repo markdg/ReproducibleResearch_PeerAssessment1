@@ -90,9 +90,22 @@ intervalAverages <- ddply(cleanDat[-2], .(interval), numcolwise(mean))
 
 Plot the time series of interval averages averaged across all days.
 
+
 ```r
+# I need the maximum value and interval to do some nice stuff with the plot
+maxValue <- max(intervalAverages$steps)
+maxInterval <- intervalAverages[which.max(intervalAverages$steps), "interval"]
+
+# Use the lattice package for this plot
 library(lattice)
-xyplot(steps ~ interval, data=intervalAverages, type="l")
+xyplot(intervalAverages$steps ~ intervalAverages$interval,
+       main="Average Steps per Interval versus Interval",
+       xlab="Interval", ylab="Steps",
+       panel = function(x, y, ...) {
+           panel.xyplot(x, y, data=intervalAverages, type="l", main="Average Steps Per Interval versus Interval")
+           panel.points(intervalAverages[which.max(intervalAverages$steps), "interval"], max(intervalAverages$steps), pch=19, col="red")
+           panel.text(maxInterval + 200, maxValue, labels="Max value")
+    })
 ```
 
 ![plot of chunk unnamed-chunk-5](figure/unnamed-chunk-5.png) 
@@ -201,6 +214,11 @@ Now, working with the data frame named newDailySteps that has had missing values
 ```r
 # Plot histogram with 10 bins
 hist(newDailySteps$steps, col="steelblue", breaks=10, xlab="Daily Steps", ylab="Number of Days", main="Histogram of Daily Steps with Imputed Data")
+
+# Add mean and median lines - not required for assignment but makes it more useful
+abline(v=mean(newDailySteps$steps), col="magenta", lwd=4)
+abline(v=median(newDailySteps$steps), col="orange", lwd=4)
+legend("topright", lty=1, lwd=4, col=c("magenta","orange"), legend=c("Mean","Median"))
 ```
 
 ![plot of chunk unnamed-chunk-11](figure/unnamed-chunk-11.png) 
@@ -211,7 +229,7 @@ The  new histogram looks very similar to the original one, although it looks lik
 ```r
 library(plotrix)
 l <- list(dailySteps$steps, newDailySteps$steps)
-multhist(l, xlab="Daily Steps", ylab="Frequency", col=c("blue", "green"))
+multhist(l, xlab="Daily Steps", ylab="Frequency", col=c("blue", "green"), main="Compare Histograms Missing Data and Imputed Data")
 legendText <- c("NAs removed", "Imputed Data")
 legend("topright", legend=legendText, col=c("blue", "green"), pch=15)
 ```
@@ -300,13 +318,6 @@ for (i in 1:nrow(newIntervalSteps)) {
         newIntervalSteps[i, "weekDayEnd"] <- "weekend"
     else newIntervalSteps[i, "weekDayEnd"] <- "weekday"
 }
-
-# Make the new variable a factor variable
-newIntervalAverages$weekDayEnd <- as.factor(newIntervalAverages$weekDayEnd)
-```
-
-```
-## Error: object 'newIntervalAverages' not found
 ```
 
 Average the interval values across the weekdays or weekend days.
@@ -327,3 +338,10 @@ xyplot(steps ~ interval | weekDayEnd, data = newIntervalAverages, layout=c(1,2),
 ```
 
 ![plot of chunk unnamed-chunk-18](figure/unnamed-chunk-18.png) 
+
+In answer to the question:  
+>Are there differences in activity patterns between weekdays and weekends?  
+
+Yes, there are some differences. The maximum number of steps in an interval is 230 and occurs in interval 835 on a weekday. It is a sharp peak at the maximum with a sustained large number until interval 930. In contrast, the maximum number of steps on a weekend is 167 at interval 915 and there are two peaks on weekends with another one of 142 at interval 1215. The plots also show that there are generally more steps taken during the middle of the day on weekends than weekdays. 
+
+One possible conclusion one might draw is that the ramp up to a high peak and sustained higher number of steps on weekday mornings reflects getting ready and heading to work/school. Once there they tend to sit for long periods of time. In contrast, on weekends people sleep in a little longer, maybe even until noon, and then are more active the rest of the day.
